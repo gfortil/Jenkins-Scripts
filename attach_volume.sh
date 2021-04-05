@@ -10,7 +10,7 @@ set -x
 ISDEBIAN=false
 
 if [ -e /etc/lsb-release ]; then
-	DISTRO=$(cat /etc/os-release | grep UBUNTU_CODENAME | cut -b 17-)
+	DISTRO=$(whoami)
     ISDEBIAN=true
 fi
 
