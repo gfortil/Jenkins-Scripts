@@ -7,6 +7,13 @@ LOG=/var/log/provisioner.log
 exec > $LOG 2>&1
 set -x
 
+ISDEBIAN=false
+
+if [ -e /etc/lsb-release ]; then
+	DISTRO=$(cat /etc/os-release | grep UBUNTU_CODENAME | cut -b 17-)
+    ISDEBIAN=true
+fi
+
 mountpoint=/mnt/vdb
 device=/dev/vdb
 
@@ -72,7 +79,8 @@ fi
 move_dir () {
     if [ ! -d ${mountpoint}$1 ] # if directory doesn't exist on the mounted volume
     then
-        mkdir -p ${mountpoint}$1
+        mkdir -p -m 777 ${mountpoint}$1
+	chown ${DISTRO}:${DISTRO} ${mountpoint}$1 -R
         if [ -d $1 ] # if directory exists on root volume
         then
             mv $1 ${mountpoint}$(dirname "$1")
@@ -81,24 +89,19 @@ move_dir () {
     fi
 }
 
-move_dir /usr/local
-move_dir /opt
-move_dir /tmp
+move_dir /var/lib/HPCCSystems
+move_dir /opt/HPCCSystems
+move_dir /etc/HPCCSystems
 move_dir /jenkins
 
-isDebian=false
-
-if [ -e /etc/lsb-release ]; then
-	distro=$(cat /etc/os-release | grep UBUNTU_CODENAME | cut -b 17-)
-    isDebian=true
-fi
-
-if [ ${isDebian} == true ]
+if [ ${ISDEBIAN} == true ]
 then
     apt-get update
     apt-get install -y openjdk-8-jre-headless
+    apt-get install -y wget 
 else
     yum install java-1.8.0-openjdk -y
+    yum install wget -y
 fi
 
 exit 0
